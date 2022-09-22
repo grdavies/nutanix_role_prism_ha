@@ -1,0 +1,10 @@
+---
+- hosts: localhost
+  gather_facts: false
+  roles:
+    - role: ../..
+  vars:
+    prism_ip: 10.38.185.37
+    prism_username: admin
+    prism_password: nx2Tech165!
+    prism_desired_ha_state: BestEffort

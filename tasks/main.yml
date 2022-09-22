@@ -1,0 +1,75 @@
+---
+# tasks file for nutanix_role_prism_ha
+  - name:
+    ansible.builtin.fail:
+      msg: "prism_desired_ha_state: '{{ prism_desired_ha_state }}' is not allowed. Please set prism_desired_ha_state to one of these values; {{ allowed_ha_states }}"
+    when:
+      - prism_desired_ha_state not in allowed_ha_states
+
+  - name: Get current cluster configuration
+    uri:
+      url: "{{ prism_api_v2 }}/cluster"
+      method: GET
+      validate_certs: "{{ validate_certs }}"
+      body_format: json
+      headers:
+        Authorization: "{{ prism_api_auth }}"
+      return_content: yes
+    register: prism_cluster_current_config
+
+  - name: Set fact hypervisor_is_ahv
+    set_fact:
+      hypervisor_is_ahv:
+    when: '"kKvm" in prism_cluster_current_config.json.hypervisor_types'
+
+  - name: Set fact cluster_rf_level
+    set_fact:
+      cluster_rf_level: "{{ prism_cluster_current_config.json.cluster_redundancy_state.current_redundancy_factor }}"
+
+  - name: Get current HA config
+    uri:
+      url: "{{ prism_api_v2 }}/ha"
+      method: GET
+      validate_certs: "{{ validate_certs }}"
+      body_format: json
+      headers:
+        Authorization: "{{ prism_api_auth }}"
+      return_content: yes
+    register: prism_ha_current_config
+
+  - name: Set default prism_ha_failover_enabled for "{{ prism_desired_ha_state }}"
+    set_fact:
+      cluster_rf_level: "{{ prism_cluster_current_config.json.cluster_redundancy_state.current_redundancy_factor }}"
+      prism_ha_failover_enabled: "{{ ha_state_defaults | json_query(query) | first | json_query('failover_enabled') }}"
+      prism_ha_reservation_type: "{{ ha_state_defaults | json_query(query) | first | json_query('reservation_type') }}"
+      prism_ha_reservation_type_comparison: "{{ ha_state_defaults | json_query(query) | first | json_query('reservation_type_comparison') }}"
+    vars:
+      query: "[?ha_state==`{{ prism_desired_ha_state }}`]"
+    when:
+      - prism_ha_failover_enabled is undefined
+
+  - name: Set default prism_ha_host_failures for "{{ prism_desired_ha_state }}"
+    set_fact:
+      prism_ha_host_failures: "{{ cluster_rf_level | int - 1 }}"
+    when:
+      - prism_ha_host_failures is undefined
+      - prism_desired_ha_state != "BestEffort"
+
+  - name: Set default prism_ha_host_failures for "{{ prism_desired_ha_state }}"
+    set_fact:
+      prism_ha_host_failures: "0"
+    when:
+      - prism_ha_host_failures is undefined
+      - prism_desired_ha_state == "BestEffort"
+
+  - name: Compare current HA config to desired state
+    set_fact:
+      prism_ha_update:
+    when: ( prism_ha_current_config.json.ha_state != prism_desired_ha_state or
+            prism_ha_current_config.json.failover_enabled != prism_ha_failover_enabled or
+            prism_ha_current_config.json.reservation_type != prism_ha_reservation_type_comparison or
+            prism_ha_current_config.json.num_host_failures_to_tolerate | int != prism_ha_host_failures | int )
+
+  - name: Perform Prism HA configuration update
+    include_tasks: update_ha.yml
+    when: prism_ha_update is defined

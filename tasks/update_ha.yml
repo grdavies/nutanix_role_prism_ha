@@ -1,0 +1,37 @@
+---
+  - name: Update AHV VM HA configuration
+    uri:
+      url: "{{ prism_api_v2 }}/ha"
+      method: PUT
+      validate_certs: "{{ validate_certs }}"
+      body: "{{ lookup('template', 'ha.j2') | from_yaml | to_json }}"
+      body_format: json
+      status_code: 200
+      headers:
+        Authorization: "{{ prism_api_auth }}"
+      return_content: yes
+    register: prism_ha_update
+    changed_when: true
+    when:
+      - hypervisor_is_ahv is defined
+
+  - name: Wait for AHV VM HA configuration task to complete
+    block:
+      - name: Checking AHV VM HA configuration task status
+        uri:
+          url: "{{ prism_api_v2 }}/tasks/{{ prism_ha_update.json.task_uuid }}"
+          method: GET
+          validate_certs: "{{ validate_certs }}"
+          status_code: 200
+          headers:
+            Authorization: "{{ prism_api_auth }}"
+        register: prism_ha_update_task
+        until: prism_ha_update_task.json.progress_status == 'Succeeded' or prism_ha_update_task.json.progress_status == 'Failed'
+        retries: 10
+        delay: 30
+
+  - name: Checking AHV VM HA configuration task failed
+    ansible.builtin.fail:
+      msg: "AHV HA update task failed. {{ prism_ha_update_task.json.meta_response.error_detail }}"
+    when:
+      - prism_ha_update_task.json.progress_status == 'Failed'
