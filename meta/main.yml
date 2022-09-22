@@ -1,6 +1,6 @@
 galaxy_info:
   author: Ross Davies
-  description: Role to configure VM high availability configuration for Nutanix Prism Element
+  description: Role to configure VM high availability configuration for AHV via Nutanix Prism Element
   company: N/A
 
   # If the issue tracker for your role is not on github, uncomment the
