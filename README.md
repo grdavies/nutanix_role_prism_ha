@@ -25,9 +25,9 @@ This playbook will set the VM HA state to highly available (ie. VM reservation).
   roles:
     - role: grdavies.nutanix_role_prism_ha
   vars:
-    prism_ip: 10.38.185.37
-    prism_username: admin
-    prism_password: nx2Tech165!
+    nutanix_host: 10.38.185.37
+    nutanix_username: admin
+    nutanix_password: nx2Tech165!
     prism_desired_ha_state: HighlyAvailable
 ```
 
@@ -38,9 +38,9 @@ This playbook will set the VM HA state to best effort.
   roles:
     - role: grdavies.nutanix_role_prism_ha
   vars:
-    prism_ip: 10.38.185.37
-    prism_username: admin
-    prism_password: nx2Tech165!
+    nutanix_host: 10.38.185.37
+    nutanix_username: admin
+    nutanix_password: nx2Tech165!
     prism_desired_ha_state: BestEffort
 ```
 
