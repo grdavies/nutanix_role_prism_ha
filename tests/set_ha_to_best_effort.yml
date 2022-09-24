@@ -7,4 +7,5 @@
     nutanix_host: 10.38.185.37
     nutanix_username: admin
     nutanix_password: nx2Tech165!
-    prism_desired_ha_state: BestEffort
+    # nutanix_debug: True
+    nutanix_prism_desired_ha_state: BestEffort

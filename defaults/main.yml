@@ -1,6 +1,6 @@
 ---
 # defaults file for nutanix_role_prism_ha
-  ha_state_defaults:
+  nutanix_prism_ha_state_defaults:
     - ha_state: BestEffort
       failover_enabled: True
       reservation_type: NO_RESERVATIONS
@@ -10,6 +10,6 @@
       reservation_type: RESERVE_SEGMENTS
       reservation_type_comparison: ReserveSegments
 
-  allowed_ha_states:
+  nutanix_prism_allowed_ha_states:
     - BestEffort
     - HighlyAvailable
