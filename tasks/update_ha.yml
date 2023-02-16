@@ -20,22 +20,14 @@
     - nutanix_debug
 
 - name: Wait for AHV VM HA configuration task to complete
-  block:
-    - name: Checking AHV VM HA configuration task status
-      uri:
-        url: "https://{{nutanix_host}}:{{nutanix_port}}/PrismGateway/services/rest/v2.0/tasks/{{ nutanix_prism_ha_update_task.json.task_uuid }}"
-        method: GET
-        validate_certs: "{{ validate_certs }}"
-        status_code: 200
-        headers:
-          Authorization: "{{ nutanix_api_auth }}"
-      register: prism_ha_update_task_status
-      until: prism_ha_update_task_status.json.progress_status == 'Succeeded' or prism_ha_update_task_status.json.progress_status == 'Failed'
-      retries: 10
-      delay: 30
+  ansible.builtin.import_role:
+    name: grdavies.nutanix_role_prism_monitor_task
+  vars:
+    nutanix_host: "{{ nutanix_host }}"
+    nutanix_username: "{{ nutanix_username }}"
+    nutanix_password: "{{ nutanix_password }}"
+    nutanix_debug: "{{ nutanix_debug }}"
+    nutanix_task_uuid: "{{ nutanix_prism_ha_update_task.json.task_uuid }}"
 
-- name: Checking AHV VM HA configuration task failed
-  ansible.builtin.fail:
-    msg: "AHV HA update task failed. {{ prism_ha_update_task_status.json.meta_response.error_detail }}"
-  when:
-    - prism_ha_update_task_status.json.progress_status == 'Failed'
+- set_fact:
+  prism_ha_update_task_status: "{{ monitored_task }}"
