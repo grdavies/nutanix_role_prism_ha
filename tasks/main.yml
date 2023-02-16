@@ -1,5 +1,6 @@
 ---
 # tasks file for nutanix_role_prism_ha
+- import_tasks: setup_api.yml
 - name: Check input variables
   include_tasks: check_inputs.yml
 
