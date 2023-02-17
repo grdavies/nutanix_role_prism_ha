@@ -1,6 +1,13 @@
 ---
 # tasks file for nutanix_role_prism_ha
 - import_tasks: setup_api.yml
+
+- name: "Task can only be run against Prism Element"
+  ansible.builtin.fail:
+    msg: "{{nutanix_host}} is not a Nutanix cluster. Please check the nutanix_host variable and try again."
+  when:
+    - nutanix_endpoint_prism_type != 'pe'
+
 - name: Check input variables
   include_tasks: check_inputs.yml
 
